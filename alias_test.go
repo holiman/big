@@ -6,7 +6,7 @@ package big_test
 
 import (
 	cryptorand "crypto/rand"
-	"math/big"
+	"github.com/holiman/big"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -69,7 +69,13 @@ func (prime) Generate(r *rand.Rand, size int) reflect.Value {
 	if err != nil {
 		panic(err)
 	}
-	return reflect.ValueOf(prime{n})
+	nwords := make([]big.Word, len(n.Bits()))
+	for i, word := range n.Bits() {
+		nwords[i] = big.Word(word)
+	}
+	n2 := new(big.Int)
+	n2.SetBits(nwords)
+	return reflect.ValueOf(prime{n2})
 }
 
 type zeroOrOne struct {
