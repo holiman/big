@@ -6,7 +6,7 @@ package big
 
 import (
 	"bytes"
-	"internal/testenv"
+//	"internal/testenv"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,12 +16,14 @@ import (
 // Tests that the linker is able to remove references to Float, Rat,
 // and Int if unused (notably, not used by init).
 func TestLinkerGC(t *testing.T) {
+	t.Skip("requires internal/testing")
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
 	t.Parallel()
 	tmp := t.TempDir()
-	goBin := testenv.GoToolPath(t)
+//	goBin := testenv.GoToolPath(t)
+	goBin := ""
 	goFile := filepath.Join(tmp, "x.go")
 	file := []byte(`package main
 import _ "math/big"

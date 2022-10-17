@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"internal/testenv"
+//	"internal/testenv"
 	"math"
 	"math/rand"
 	"strconv"
@@ -1941,7 +1941,7 @@ func TestNewIntMinInt64(t *testing.T) {
 }
 
 func TestNewIntAllocs(t *testing.T) {
-	testenv.SkipIfOptimizationOff(t)
+	//testenv.SkipIfOptimizationOff(t)
 	for _, n := range []int64{0, 7, -7, 1 << 30, -1 << 30, 1 << 50, -1 << 50} {
 		x := NewInt(3)
 		got := testing.AllocsPerRun(100, func() {

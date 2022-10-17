@@ -7,6 +7,7 @@
 
 package big
 
-import "internal/cpu"
+//import "internal/cpu"
+import "golang.org/x/sys/cpu"
 
 var support_adx = cpu.X86.HasADX && cpu.X86.HasBMI2
