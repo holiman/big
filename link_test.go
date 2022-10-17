@@ -6,7 +6,7 @@ package big
 
 import (
 	"bytes"
-//	"internal/testenv"
+	//	"internal/testenv"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,7 +22,7 @@ func TestLinkerGC(t *testing.T) {
 	}
 	t.Parallel()
 	tmp := t.TempDir()
-//	goBin := testenv.GoToolPath(t)
+	//	goBin := testenv.GoToolPath(t)
 	goBin := ""
 	goFile := filepath.Join(tmp, "x.go")
 	file := []byte(`package main
