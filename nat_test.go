@@ -523,6 +523,10 @@ var expNNTests = []struct {
 		"444747819283133684179",
 		"42",
 	},
+	{"0", "0x40000000000000", "0x200", "0"},
+	{"0xeffffff900002f00", "0x40000000000000", "0x200", "0"},
+	{"5", "1435700818", "72", "49"},
+	{"0xffff", "0x300030003000300030003000300030003000302a3000300030003000300030003000300030003000300030003000300030003030623066307f3030783062303430383064303630343036", "0x300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "0xa3f94c08b0b90e87af637cacc9383f7ea032352b8961fc036a52b659b6c9b33491b335ffd74c927f64ddd62cfca0001"},
 }
 
 func TestExpNN(t *testing.T) {
@@ -536,11 +540,27 @@ func TestExpNN(t *testing.T) {
 			m = natFromString(test.m)
 		}
 
-		z := nat(nil).expNN(x, y, m)
+		z := nat(nil).expNN(x, y, m, false)
 		if z.cmp(out) != 0 {
 			t.Errorf("#%d got %s want %s", i, z.utoa(10), out.utoa(10))
 		}
 	}
+}
+
+func FuzzExpMont(f *testing.F) {
+	f.Fuzz(func(t *testing.T, x1, x2, x3, y1, y2, y3, m1, m2, m3 uint) {
+		if m1 == 0 && m2 == 0 && m3 == 0 {
+			return
+		}
+		x := new(Int).SetBits([]Word{Word(x1), Word(x2), Word(x3)})
+		y := new(Int).SetBits([]Word{Word(y1), Word(y2), Word(y3)})
+		m := new(Int).SetBits([]Word{Word(m1), Word(m2), Word(m3)})
+		out := new(Int).Exp(x, y, m)
+		want := new(Int).expSlow(x, y, m)
+		if out.Cmp(want) != 0 {
+			t.Errorf("x = %#x\ny=%#x\nz=%#x\nout=%#x\nwant=%#x\ndc: 16o 16i %X %X %X |p", x, y, m, out, want, x, y, m)
+		}
+	})
 }
 
 func BenchmarkExp3Power(b *testing.B) {

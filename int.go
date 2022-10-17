@@ -493,6 +493,14 @@ func (x *Int) TrailingZeroBits() uint {
 // Modular exponentiation of inputs of a particular size is not a
 // cryptographically constant-time operation.
 func (z *Int) Exp(x, y, m *Int) *Int {
+	return z.exp(x, y, m, false)
+}
+
+func (z *Int) expSlow(x, y, m *Int) *Int {
+	return z.exp(x, y, m, true)
+}
+
+func (z *Int) exp(x, y, m *Int, slow bool) *Int {
 	// See Knuth, volume 2, section 4.6.3.
 	xWords := x.abs
 	if y.neg {
@@ -516,7 +524,7 @@ func (z *Int) Exp(x, y, m *Int) *Int {
 		mWords = m.abs // m.abs may be nil for m == 0
 	}
 
-	z.abs = z.abs.expNN(xWords, yWords, mWords)
+	z.abs = z.abs.expNN(xWords, yWords, mWords, slow)
 	z.neg = len(z.abs) > 0 && x.neg && len(yWords) > 0 && yWords[0]&1 == 1 // 0 has no sign
 	if z.neg && len(mWords) > 0 {
 		// make modulus result positive

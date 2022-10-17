@@ -40,6 +40,10 @@ var (
 	natTen  = nat{10}
 )
 
+func (z nat) String() string {
+	return "0x" + string(z.itoa(false, 16))
+}
+
 func (z nat) clear() {
 	for i := range z {
 		z[i] = 0
@@ -642,6 +646,9 @@ func getNat(n int) *nat {
 		z = new(nat)
 	}
 	*z = z.make(n)
+	if n > 0 {
+		(*z)[0] = 0xfedcb // break code expecting zero
+	}
 	return z
 }
 
@@ -923,7 +930,7 @@ func (z nat) random(rand *rand.Rand, limit nat, n int) nat {
 
 // If m != 0 (i.e., len(m) != 0), expNN sets z to x**y mod m;
 // otherwise it sets z to x**y. The result is the value of z.
-func (z nat) expNN(x, y, m nat) nat {
+func (z nat) expNN(x, y, m nat, slow bool) nat {
 	if alias(z, x) || alias(z, y) {
 		// We cannot allow in-place modification of x or y.
 		z = nil
@@ -971,7 +978,7 @@ func (z nat) expNN(x, y, m nat) nat {
 		// and a CRT-decomposed Montgomery method for the remaining values
 		// (even values times non-trivial odd values, which decompose into one
 		// instance of each of the first two cases).
-		if len(y) > 1 {
+		if len(y) > 1 && !slow {
 			if m[0]&1 == 1 {
 				return z.expNNMontgomery(x, y, m)
 			}
@@ -1056,8 +1063,8 @@ func (z nat) expNNMontgomeryEven(x, y, m nat) nat {
 	// We want z = x**y mod m.
 	// z1 = x**y mod m1 = (x**y mod m) mod m1 = z mod m1
 	// z2 = x**y mod m2 = (x**y mod m) mod m2 = z mod m2
-	z1 := nat(nil).expNN(x, y, m1)
-	z2 := nat(nil).expNN(x, y, m2)
+	z1 := nat(nil).expNN(x, y, m1, false)
+	z2 := nat(nil).expNN(x, y, m2, false)
 
 	// Reconstruct z from z1, z2 using CRT, using algorithm from paper,
 	// which uses only a single modInverse (and an easy one at that).
@@ -1107,8 +1114,8 @@ func (z nat) expNNWindowed(x, y nat, logM uint) nat {
 	for i := range powers {
 		powers[i] = getNat(w)
 	}
-	powers[0].set(natOne)
-	powers[1].trunc(x, logM)
+	*powers[0] = powers[0].set(natOne)
+	*powers[1] = powers[1].trunc(x, logM)
 	for i := 2; i < 1<<n; i += 2 {
 		p2, p, p1 := powers[i/2], powers[i], powers[i+1]
 		*p = p.sqr(*p2)
@@ -1116,8 +1123,6 @@ func (z nat) expNNWindowed(x, y nat, logM uint) nat {
 		*p1 = p1.mul(*p, x)
 		*p1 = p1.trunc(*p1, logM)
 	}
-
-	z = z.setWord(1)
 
 	// Because phi(2**logM) = 2**(logM-1), x**(2**(logM-1)) = 1,
 	// so we can compute x**(y mod 2**(logM-1)) instead of x**y.
@@ -1134,6 +1139,7 @@ func (z nat) expNNWindowed(x, y nat, logM uint) nat {
 		i = mtop
 	}
 	advance := false
+	z = z.setWord(1)
 	for ; i >= 0; i-- {
 		yi := y[i]
 		if i == mtop {
